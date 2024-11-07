@@ -342,6 +342,11 @@ impl<Stream: Read + Write> WebSocket<Stream> {
         self.context.write(&mut self.socket, message)
     }
 
+    /// Like `write` but accepts a `Frame`
+    pub fn write_frame(&mut self, frame: Frame) -> Result<()> {
+        self.context.write_frame(&mut self.socket, frame)
+    }
+
     /// Flush writes.
     ///
     /// Ensures all messages previously passed to [`write`](Self::write) and automatic
@@ -565,6 +570,14 @@ impl WebSocketContext {
             Message::Frame(f) => f,
         };
 
+        self.write_frame(stream, frame)
+    }
+
+    /// Write a frame to the provided stream.
+    pub fn write_frame<Stream>(&mut self, stream: &mut Stream, frame: Frame) -> Result<()>
+    where
+        Stream: Read + Write,
+    {
         let should_flush = self._write(stream, Some(frame))?;
         if should_flush {
             self.flush(stream)?;
